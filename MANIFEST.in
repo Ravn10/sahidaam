@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include sahidaam *.css
+recursive-include sahidaam *.csv
+recursive-include sahidaam *.html
+recursive-include sahidaam *.ico
+recursive-include sahidaam *.js
+recursive-include sahidaam *.json
+recursive-include sahidaam *.md
+recursive-include sahidaam *.png
+recursive-include sahidaam *.py
+recursive-include sahidaam *.svg
+recursive-include sahidaam *.txt
+recursive-exclude sahidaam *.pyc
