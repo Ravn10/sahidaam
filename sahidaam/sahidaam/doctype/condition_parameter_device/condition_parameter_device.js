@@ -1,11 +1,10 @@
 // Copyright (c) 2018, Crisco Consulting and contributors
 // For license information, please see license.txt
 
-cur_frm.add_fetch("item", "buying_rate", "buying_rate")
-
-frappe.ui.form.on('Parameters', {
+cur_frm.add_fetch("model", "buying_rate", "buying_rate")
+frappe.ui.form.on('Codition Parameter Device', {
 	refresh: function (frm) {
-		cur_frm.fields_dict['item'].get_query = function (doc, cdt, cdn) {
+		cur_frm.fields_dict['model'].get_query = function (doc, cdt, cdn) {
 			return {
 				filters: {
 					'is_purchase_item': 1,
@@ -16,9 +15,5 @@ frappe.ui.form.on('Parameters', {
 				}
 			}
 		}
-	},
-
+	}
 });
-
-
-

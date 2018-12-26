@@ -266,8 +266,13 @@ def id_generator_otp():
 
 
 @frappe.whitelist(allow_guest=True)
-def SendOTP(email):
+def SendOTP(email,forgot_password=None):
 	try:
+		if forgot_password==None:	
+			obj=[]
+			user_email=frappe.db.get_value("User",email,"email")
+			if user_email:
+				return generateResponse("S",message="Already Registerd",data=obj)
 		otpobj=frappe.db.get("UserOTP", {"user":email})
 		if otpobj:
 			frappe.db.sql("""delete from tabUserOTP where user='"""+email+"""'""")
@@ -327,11 +332,101 @@ def getUserNameId():
 
 	except Exception as e:
 		return generateResponse("F",error=e)
+
+@frappe.whitelist(allow_guest=True)
+def forgotPassword(email,password):
+	try:
+		_update_password(email,password)
+		temp=[]
+		return generateResponse("S",message="Password Updated Succesfully",data=temp)
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+@frappe.whitelist()
+def getSalesOrderHistory():
+	try:
+		user=getUserNameId()
+		so_list=frappe.db.sql("""select so.name from `tabSales Order` as so inner join `tabCustomer` as cust on so.customer=cust.name where cust.user=%s""",user)
+		so_obj=[]
+		if len(so_list)>0:
+			for row in so_list:
+				so=frappe.get_doc("Sales Order",row[0])
+				so_obj.append(so)
+				
+			return generateResponse("S",message="Sales Order List Get Succesfully",data=so_obj)
+		else:
+			temp=[]
+			return generateResponse("S",message="Sales Order List Get Succesfully",data=temp)
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+
+
+@frappe.whitelist(allow_guest=True)
+def getModelList():
+	try:
+		items=frappe.get_all("Item",filters=[["Item","show_in_website","=","1"],["Item","disabled","=","0"],["Item","is_purchase_item","=","1"]],fields=["item_name", "item_code"])
+		item_dict=[]
+		if items:
+			return generateResponse("S",message="Successfully Get Item List",data=items)
+		else:
+			return generateResponse("S",message="Successfully Get Item List",data=item_dict)
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+
+@frappe.whitelist(allow_guest=True)
+def getConditionParameter(model):
+	try:
+		condition=[]
+		condition_doc=frappe.get_doc("Model Wise Parameter",model)
+		if condition_doc:
+			for cond in condition_doc.condition_parameter_device:
+				condition_json={}
+				condition_json["condition"]=cond.parameter
+				condition.append(condition_json)
+
+		if len(condition)>0:
+			return generateResponse("S",message="Successfully Get Condition Parameter",data=condition)
+		else:
+			temp=[]
+			return generateResponse("S",message="Successfully Get Condition Parameter",data=temp)
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+
+@frappe.whitelist(allow_guest=True)
+def getEstimateValue(model,parameter_obj=None):
+	try:
+		parameter_obj='[{"condition":"Switch On","check":"No"},{"condition":"Bettery Working","check":"Yes"}]'
+		condition_doc=frappe.get_doc("Model Wise Parameter",model)
+		if condition_doc:
+			buying_rate=condition_doc.buying_rate
+			for param in json.loads(parameter_obj):
+				for cond in condition_doc.condition_parameter_device:
+					if param["condition"]==cond.parameter:
+						if param["check"]=="Yes":
+							buying_rate=buying_rate+(flt(condition_doc.buying_rate)*flt(cond.yes)/100)
+						if param["check"]=="No":
+							if cond.no>=100:
+								return generateResponse("S",message="Successfully Get Estimate Value",data=0)
+							buying_rate=buying_rate-(flt(condition_doc.buying_rate)*flt(cond.no)/100)
+
+			return generateResponse("S",message="Successfully Get Estimate Value",data=buying_rate)
+						
+			
+
+	except Exception as e:
+		return generateResponse("F",error=e)
 	
+			
 
 	
 @frappe.whitelist()
-def getConditionParameter():
+def getConditionParameter1():
 	try:
 		condition_doc=frappe.get_all("Condition Parameter",filters={'disable':0},fields=["name"])
 		if condition_doc:
@@ -341,6 +436,9 @@ def getConditionParameter():
 			return generateResponse("S",message="Successfully Get Parameters But No Parameters Available",data=temp)
 	except Exception as e:
 		return generateResponse("F",error=e)
+
+
+
 	
 
 			
