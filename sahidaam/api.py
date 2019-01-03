@@ -6,6 +6,7 @@ from frappe.utils.password import update_password as _update_password
 from frappe.desk.notifications import clear_notifications
 from frappe.utils.user import get_system_managers
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+from frappe.core.doctype.communication.email import make
 import frappe.permissions
 import frappe.share
 import re
@@ -218,18 +219,7 @@ def makeDeliveryNote(customer,itemobj):
 		return generateResponse("F",error=e)
 
 
-@frappe.whitelist()
-def getBrandName():
-	try:
-		brand_dict=[]
-		brands=frappe.get_all("Brand",filters={},fields=["name"])
-		if brands:
-			return generateResponse("S",message="Brand List Found",data=brands)
-		else:
-			return generateResponse("S",message="Brand List Found",data=brand_dict)
 
-	except Exception as e:
-		return generateResponse("F",error=e)
 
 
 @frappe.whitelist()
@@ -300,7 +290,8 @@ def SendOTP(email,forgot_password=None):
 			user_message="Verification Code Sent Successfully On "+email
 			res_obj={}
 			res_obj["user"]=str(email)
-			return generateResponse("S",message=user_message,data=res_obj)
+			frappe.sendmail(recipients= email,subject='Sahidaam OTP',message=mess)
+			return generateResponse("S",message="SMS Sent Successfully",data=res_obj)
 	except Exception as e:
 		return generateResponse("F",error=e)
 
@@ -361,12 +352,43 @@ def getSalesOrderHistory():
 	except Exception as e:
 		return generateResponse("F",error=e)
 
+@frappe.whitelist(allow_guest=True)
+def getBrandName(category):
+	try:
+
+		brand_dict=[]
+		brands=frappe.get_all("Brand",filters=[["Website Item Group","item_group","=",category]],fields=["name"])
+		if brands:
+			return generateResponse("S",message="Brand List Found",data=brands)
+		else:
+			return generateResponse("S",message="Brand List Found",data=brand_dict)
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
 
 
 @frappe.whitelist(allow_guest=True)
-def getModelList():
+def getCategories():
 	try:
-		items=frappe.get_all("Item",filters=[["Item","show_in_website","=","1"],["Item","disabled","=","0"],["Item","is_purchase_item","=","1"]],fields=["item_name", "item_code"])
+		itemCategories=frappe.get_all("Item Group",filters=[["Item Group","show_in_website","=","1"]],fields=["name"])
+		item_dict=[]
+		if itemCategories:
+			return generateResponse("S",message="Successfully Get Item List",data=itemCategories)
+		else:
+			return generateResponse("S",message="Successfully Get Item List",data=item_dict)
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+		
+
+
+
+@frappe.whitelist(allow_guest=True)
+def getModelList(brand,category):
+	try:
+		items=frappe.get_all("Item",filters=[["Item","brand","=",brand],["Item","item_group","=",category],["Item","is_purchase_item","=","1"]],fields=["item_name", "item_code"])
 		item_dict=[]
 		if items:
 			return generateResponse("S",message="Successfully Get Item List",data=items)
@@ -401,7 +423,7 @@ def getConditionParameter(model):
 @frappe.whitelist(allow_guest=True)
 def getEstimateValue(model,parameter_obj=None):
 	try:
-		parameter_obj='[{"condition":"Switch On","check":"No"},{"condition":"Bettery Working","check":"Yes"}]'
+		#parameter_obj='[{"condition":"Switch On","check":"No"},{"condition":"Bettery Working","check":"Yes"}]'
 		condition_doc=frappe.get_doc("Model Wise Parameter",model)
 		if condition_doc:
 			buying_rate=condition_doc.buying_rate
@@ -421,7 +443,9 @@ def getEstimateValue(model,parameter_obj=None):
 
 	except Exception as e:
 		return generateResponse("F",error=e)
-	
+
+
+
 			
 
 	
