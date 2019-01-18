@@ -14,11 +14,11 @@
  "docstatus": 0, 
  "doctype": "Web Form", 
  "idx": 0, 
- "introduction_text": "", 
+ "introduction_text": "<div style=\"text-align: center;\"><span style=\"font-size: 36px;\"><font color=\"#ff9c00\">How It Works</font></span></div><div style=\"text-align: center;\"><br></div><hr><div style=\"text-align: center;\"><br></div> <div class=\"row\">    <div class=\"col\"><div style=\"text-align: left;\"><span style=\"font-size: 24px;\">\ufeff</span><img src=\"/files/Step-1.png\" style=\"width: 60px; height: 60px;\">\u00a0<span style=\"font-size: 24px;\"><font color=\"#000000\">Select your device</font></span></div></div><div class=\"col\"><div style=\"text-align: left;\"><span style=\"font-size: 24px;\">\ufeff</span><img src=\"/files/step2.png\" style=\"width: 60px; height: 60px;\">\u00a0<span style=\"font-size: 24px;\"><font color=\"#000000\">Tell us about your device condition</font></span></div></div>    <div class=\"w-100\"></div>    <div class=\"col\"><div style=\"text-align: left;\"><span style=\"font-size: 24px;\">\ufeff</span><img src=\"/files/step3.png\" style=\"width: 60px; height: 60px;\">\u00a0<span style=\"font-size: 24px;\"><font color=\"#000000\">Visit our store </font></span></div></div><div class=\"col\"><div style=\"text-align: left;\"><span style=\"font-size: 24px;\">\ufeff</span><img src=\"/files/Step-4.png\" style=\"width: 60px; height: 60px;\">\u00a0<span style=\"font-size: 24px;\"><font color=\"#000000\">Get Instant Cash</font></span></div></div>  </div>", 
  "is_standard": 1, 
  "login_required": 0, 
  "max_attachment_size": 0, 
- "modified": "2019-01-07 20:26:27.688556", 
+ "modified": "2019-01-17 09:32:42.102743", 
  "modified_by": "Administrator", 
  "module": "Sahidaam", 
  "name": "estimate-value", 
@@ -26,33 +26,11 @@
  "payment_button_label": "Buy Now", 
  "published": 1, 
  "route": "estimate-value", 
- "show_sidebar": 1, 
+ "show_sidebar": 0, 
  "sidebar_items": [], 
  "success_url": "/estimate-value", 
- "title": "Estimate Value", 
+ "title": "Sahi Rate Calculator", 
  "web_form_fields": [
-  {
-   "fieldname": "item_group", 
-   "fieldtype": "Link", 
-   "hidden": 0, 
-   "label": "Product Category", 
-   "max_length": 0, 
-   "max_value": 0, 
-   "options": "Item Group", 
-   "read_only": 0, 
-   "reqd": 0
-  }, 
-  {
-   "fieldname": "brand", 
-   "fieldtype": "Link", 
-   "hidden": 0, 
-   "label": "Brand", 
-   "max_length": 0, 
-   "max_value": 0, 
-   "options": "Brand", 
-   "read_only": 0, 
-   "reqd": 0
-  }, 
   {
    "fieldname": "device", 
    "fieldtype": "Link", 
@@ -61,6 +39,15 @@
    "max_length": 0, 
    "max_value": 0, 
    "options": "Item", 
+   "read_only": 0, 
+   "reqd": 0
+  }, 
+  {
+   "fieldtype": "HTML", 
+   "hidden": 0, 
+   "max_length": 0, 
+   "max_value": 0, 
+   "options": "<div class=\"cnq\"></div>", 
    "read_only": 0, 
    "reqd": 0
   }

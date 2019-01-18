@@ -1,0 +1,11 @@
+.page-head, .btn-form-submit{
+display:none;
+}
+.control-label {
+	font-size: 18px;
+	color:black!important;
+}
+.form-control{
+	width:45%;
+	border:1px solid #151617;
+}

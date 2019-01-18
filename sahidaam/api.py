@@ -66,7 +66,7 @@ def generateResponse(_type,status=None,message=None,data=None,error=None):
 
 
 @frappe.whitelist(allow_guest=True)
-def makeUser(first_name,last_name,email,telephone,address1,address2,zone,city,postalcode,country,password,sponser=None):
+def makeUser(first_name,last_name,email,telephone,address1,address2,city,postalcode,password,state=None,country=None,zone=None,sponser=None):
 	try:
 		obj=[]
 		user_email=frappe.db.get_value("User",email,"name")
@@ -79,7 +79,8 @@ def makeUser(first_name,last_name,email,telephone,address1,address2,zone,city,po
 			first_name=first_name,
 			last_name=last_name,
 			phone=telephone,
-			mobile_no=telephone
+			mobile_no=telephone,
+			send_welcome_email=0
 	
 		)).insert(ignore_permissions=True)
 		if user:
@@ -89,7 +90,7 @@ def makeUser(first_name,last_name,email,telephone,address1,address2,zone,city,po
 				full_name=first_name+' '+last_name
 			else:
 				full_name=first_name
-			result=makeCustomer(full_name,address1,address2,zone,city,postalcode,telephone,country,user.name,sponser)
+			result=makeCustomer(full_name,address1,address2,city,postalcode,user.name,telephone,state)
 			if result:
 				return generateResponse("S",message="Successfully Registred",data=user)
 	except Exception as e:
@@ -98,7 +99,7 @@ def makeUser(first_name,last_name,email,telephone,address1,address2,zone,city,po
 
 
 @frappe.whitelist()
-def makeCustomer(full_name,address1,address2,zone,city,postalcode,telephone,country,user,sponser=None):
+def makeCustomer(full_name,address1,address2,city,postalcode,user,telephone=None,state=None):
 	customer=frappe.get_doc(dict(
 			doctype="Customer",
 			customer_name=full_name,
@@ -108,19 +109,19 @@ def makeCustomer(full_name,address1,address2,zone,city,postalcode,telephone,coun
 			user=user		
 	)).insert(ignore_permissions=True)
 	if customer:
-		add_result=makeAddress(customer.name,address1,address2,zone,city,postalcode,'India',telephone,sponser)
+		add_result=makeAddress(customer.name,address1,address2,city,postalcode,telephone,state)
 		if add_result:
 			return add_result
 	
 
 
 @frappe.whitelist()
-def makeAddress(customer,address1,address2,zone,city,postalcode,country,telephone,sponser):
+def makeAddress(customer,address1,address2,city,postalcode,telephone=None,state=None):
 	doc1=frappe.get_doc({
 			"docstatus": 0,
 			"doctype": "Address",
 			"address_type": "Billing",
-			"country":str(country),
+			"country":'India',
 			"is_primary_address": 1,
 			"is_shipping_address": 0,
 			"is_your_company_address": 0,
@@ -136,6 +137,7 @@ def makeAddress(customer,address1,address2,zone,city,postalcode,country,telephon
 			"address_line1":str(address1),
 			"address_line2":str(address2),
 			"city": str(city),
+			"state":str(state),
 			"pincode":str(postalcode),
 			"phone":telephone,
 			"gstin":"NA",
@@ -236,20 +238,7 @@ def getItemListBuying():
 		return generateResponse("F",error=e)
 
 
-@frappe.whitelist()
-def getUserDetails():
-	try:
-		user=getUserNameId()
-		if not user==False:
-			user_doc=frappe.get_all("User",filters={'name':user},fields=["name","email","first_name","last_name","phone"])
-			if user_doc:
-				return generateResponse("S",message="Successfully Get User Details",data=user_doc)
-			else:
-				temp=[]
-				return generateResponse("S",message="Successfully Get User Details",data=temp)
 
-	except Exception as e:
-		return generateResponse("F",error=e)
 @frappe.whitelist()
 def id_generator_otp():
    return ''.join(random.choice('0123456789') for _ in range(6))
@@ -371,7 +360,7 @@ def getBrandName(category):
 @frappe.whitelist(allow_guest=True)
 def getCategories():
 	try:
-		itemCategories=frappe.get_all("Item Group",filters=[["Item Group","show_in_website","=","1"]],fields=["name"])
+		itemCategories=frappe.get_all("Item Group",filters=[["Item Group","show_in_sell","=","1"]],fields=["name"])
 		item_dict=[]
 		if itemCategories:
 			return generateResponse("S",message="Successfully Get Item List",data=itemCategories)
@@ -460,6 +449,156 @@ def getConditionParameter1():
 			return generateResponse("S",message="Successfully Get Parameters But No Parameters Available",data=temp)
 	except Exception as e:
 		return generateResponse("F",error=e)
+
+
+@frappe.whitelist(allow_guest=True)
+def makeUserFromSocialLogin(email,auth_token,sl_type,first_name=None,last_name=None,mobile=None):
+	try:
+		if sl_type=="Google":
+			obj=[]
+			user_email=frappe.db.get_value("User",email,"name")
+			if user_email:
+				frappe.db.set_value("User",email,"google_userid",auth_token)
+				_update_password(email,auth_token)
+				user_obj={}
+				user_obj["user"]=email
+				user_obj["password"]=auth_token
+				obj.append(user_obj)
+				return generateResponse("S",message="Login Details",data=obj)
+		
+			user=frappe.get_doc(dict(
+				doctype="User",
+				email=email,
+				first_name=first_name,
+				last_name=last_name,
+				phone=mobile if not mobile==None else '',
+				mobile_no=mobile if not mobile==None else '',
+				google_userid=auth_token
+	
+			)).insert(ignore_permissions=True)
+			if user:
+				_update_password(user.name,auth_token)
+				user_obj={}
+				user_obj["user"]=email
+				user_obj["password"]=auth_token
+				obj.append(user_obj)
+				return generateResponse("S",message="Login Details",data=obj)
+				#result=makeCustomer(full_name,address1,address2,zone,city,postalcode,telephone,country,user.name,sponser)
+				#if result:
+
+
+		if sl_type=="Facebook":
+			obj=[]
+			user_email=frappe.db.get_value("User",email,"name")
+			if user_email:
+				frappe.db.set_value("User",email,"fb_userid",auth_token)
+				_update_password(email,auth_token)
+				user_obj={}
+				user_obj["user"]=email
+				user_obj["password"]=auth_token
+				obj.append(user_obj)
+				return generateResponse("S",message="Login Details",data=obj)
+		
+			user=frappe.get_doc(dict(
+				doctype="User",
+				email=email,
+				first_name=first_name,
+				last_name=last_name,
+				phone=mobile if not mobile==None else '',
+				mobile_no=mobile if not mobile==None else '',
+				fb_userid=auth_token
+	
+			)).insert(ignore_permissions=True)
+			if user:
+				_update_password(user.name,auth_token)
+				user_obj={}
+				user_obj["user"]=email
+				user_obj["password"]=auth_token
+				obj.append(user_obj)
+				return generateResponse("S",message="Login Details",data=obj)
+					
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+
+@frappe.whitelist()
+def getUserDetails():
+	try:
+		user=getUserNameId()
+		if not user==False:
+			user_doc=frappe.get_all("User",filters={'name':user},fields=["name","email","first_name","last_name","phone"])
+			if user_doc:
+				customer=getCustomerForUser()
+				if customer==True:
+					user_doc[0]["address"]=True
+				else:
+					user_doc[0]["address"]=False
+				return generateResponse("S",message="Successfully Get User Details",data=user_doc)
+			else:
+				temp=[]
+				return generateResponse("S",message="Successfully Get User Details",data=temp)
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+
+@frappe.whitelist()
+def getCustomerForUser():
+	try:
+		user=getUserNameId()
+		if not user==False:
+			customer_doc=frappe.get_all("Customer",filters={'user':user},fields=["name"])
+			if len(customer_doc)>0:
+				return True
+			else:
+				return False
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+
+
+@frappe.whitelist()
+def addAddress(address1,address2,city,postalcode,state):
+	try:
+		user=getUserNameId()
+		if not user==False:
+			user_doc=frappe.get_doc("User",user)
+			full_name=''
+			if user_doc.last_name:
+				full_name=user_doc.first_name+' '+user_doc.last_name
+			else:
+				full_name=user_doc.first_name
+			result=makeCustomer(full_name,address1,address2,city,postalcode,user_doc.name,state)
+			if result:
+				return generateResponse("S",message="Successfully Added",data=result)
+			else:
+				temp=[]
+				return generateResponse("S",message="Not Added",data=temp)
+		
+
+	except Exception as e:
+		return generateResponse("F",error=e)
+
+
+@frappe.whitelist()
+def stockBalance(item_code):
+	warehouse=frappe.db.get_value("Sahidaam Setting","Sahidaam Parameter", "selling_warehouse")
+	balance=frappe.db.sql("""select qty_after_transaction from `tabStock Ledger Entry`	
+			where item_code=%s and is_cancelled='No' and warehouse=%s order by posting_date desc, posting_time desc, name desc limit 1""", (item_code,warehouse))
+	if not balance[0][0]==None:
+		return balance[0][0]
+	else:
+		return 0
+
+
+
+
+		
+
+
+
+	
 
 
 
