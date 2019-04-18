@@ -420,7 +420,13 @@ def getEstimateValue(model,parameter_obj=None):
 				for cond in condition_doc.condition_parameter_device:
 					if param["condition"]==cond.parameter:
 						if param["check"]=="Yes":
-							buying_rate=buying_rate+(flt(condition_doc.buying_rate)*flt(cond.yes)/100)
+							if cond.parameter=="Dead":
+								if condition_doc.buying_rate>=10000:
+									return generateResponse("S",message="Successfully Get Estimate Value",data=1500)
+								else:
+									return generateResponse("S",message="Successfully Get Estimate Value",data=750)
+							else:
+								buying_rate=buying_rate+(flt(condition_doc.buying_rate)*flt(cond.yes)/100)
 						if param["check"]=="No":
 							if cond.no>=100:
 								return generateResponse("S",message="Successfully Get Estimate Value",data=0)
